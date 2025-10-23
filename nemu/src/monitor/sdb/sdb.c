@@ -12,7 +12,7 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-
+#include <stdlib.h>
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <readline/readline.h>
@@ -49,9 +49,18 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
+static int cmd_si(char *args){
+  int N = 1;
+  if (args != NULL){
+  N = strtol(args, NULL , 10);
+}
+  cpu_exec(N);
+  return 0;
 
+}
 static int cmd_help(char *args);
 
 static struct {
@@ -62,7 +71,7 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  { "si", "step 10 instructions and pause", cmd_si },
   /* TODO: Add more commands */
 
 };
