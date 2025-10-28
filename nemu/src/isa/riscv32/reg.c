@@ -24,6 +24,13 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  printf("=======CPU register state=======\n");
+  printf("pc : 0x%0*lx\n",(int)(sizeof(cpu.pc)*2),(long)cpu.pc);
+  int nreg = MUXDEF(CONFIG_RVE, 16, 32);
+  for(int i = 0;i<nreg;i++){
+  printf("x%02d (%-4s): 0x%0*lx\n",i,regs[i],(int)(sizeof(cpu.gpr[i])*2),(long)cpu.gpr[i]);
+}
+  printf("====================\n");
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {

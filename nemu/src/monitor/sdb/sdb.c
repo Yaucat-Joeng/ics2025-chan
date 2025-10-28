@@ -42,6 +42,7 @@ static char* rl_gets() {
   return line_read;
 }
 
+void isa_reg_display();
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
@@ -59,8 +60,35 @@ static int cmd_si(char *args){
 }
   cpu_exec(N);
   return 0;
+}
+static int cmd_info(char *args){
+  if (args==NULL){
+    printf("usage: info <r>/<w>\n");
+    return 0;
+  }
+  if(strcmp(args,"r")==0){
+    isa_reg_display();
+  }
+  else
+  {
+    printf("unkown info argument: %s\n",args);
+  }
+  return 0;
+
+
 
 }
+static int cmd_x(char *args){
+  int n = 1;
+  if(args!=NULL){
+    int i = 0;  
+    for(n=strtol(args,NULL,10);i<n;i++){
+  printf(pmem[i]);
+  }
+  }
+
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -72,6 +100,7 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "step 10 instructions and pause", cmd_si },
+  { "info","print reg/watchpoint infos", cmd_info },
   /* TODO: Add more commands */
 
 };
