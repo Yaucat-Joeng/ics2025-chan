@@ -80,10 +80,18 @@ static int cmd_info(char *args){
 }
 static int cmd_x(char *args){
   int n = 1;
-  if(args!=NULL){
+  char *narg = strtok(args,"");
+  char *aarg = strtok(NULL,"");
+  if(narg == NULL || aarg ==NULL){
+    printf("Usage : x N $expression \n");
+  }
+  if(narg!=NULL){
     int i = 0;  
     for(n=strtol(args,NULL,10);i<n;i++){
-  printf(pmem[i]);
+       for(int j =0;j<4;j++){
+
+       
+       }
   }
   }
 
