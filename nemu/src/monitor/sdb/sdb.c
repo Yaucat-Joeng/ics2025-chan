@@ -42,7 +42,11 @@ static char* rl_gets() {
   return line_read;
 }
 
+
+
+uint8_t* guest_to_host();
 void isa_reg_display();
+
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
@@ -80,21 +84,33 @@ static int cmd_info(char *args){
 }
 static int cmd_x(char *args){
   int n = 1;
-  char *narg = strtok(args,"");
-  char *aarg = strtok(NULL,"");
+  char *narg = strtok(args," ");
+  char *aarg = strtok(NULL," ");
   if(narg == NULL || aarg ==NULL){
-    printf("Usage : x N $expression \n");
+    printf("\033[1;31mWarning:\033[0m \033[1;33m Missing args in cmd x, Usage : x N $expression\033[0m \n");
+    return 0;
   }
   if(narg!=NULL){
-    int i = 0;  
-    for(n=strtol(args,NULL,10);i<n;i++){
-       for(int j =0;j<4;j++){
-
-       
-       }
+    n = strtol(narg,NULL,10);
   }
+ 
+  uint32_t g_addr =strtoul(aarg,NULL,0);
+ /* if(g_addr>CONFIG_MSIZE){
+     printf("\033[1;31mWarning: address is out of memory range \033[0m \n");
+     return 0;
+        
+  }*/
+  for(int i=0;i<n;i++){
+   printf("\033[1;32m0x%08x:\033[0m",g_addr);
+   for(int j=3;j>=0;j--){
+     printf("\033[1;36m%02x\033[0m ", (guest_to_host(g_addr))[j]);
+   } 
+   printf("\n");
+   g_addr = g_addr + 4;
+
   }
 
+return 0;
 }
 
 static int cmd_help(char *args);
@@ -109,6 +125,7 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   { "si", "step 10 instructions and pause", cmd_si },
   { "info","print reg/watchpoint infos", cmd_info },
+  { "x", "scan pmemory", cmd_x },
   /* TODO: Add more commands */
 
 };
