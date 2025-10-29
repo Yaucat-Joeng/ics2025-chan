@@ -95,13 +95,15 @@ static int cmd_x(char *args){
   }
  
   uint32_t g_addr =strtoul(aarg,NULL,0);
- /* if(g_addr>CONFIG_MSIZE){
-     printf("\033[1;31mWarning: address is out of memory range \033[0m \n");
-     return 0;
-        
-  }*/
-  for(int i=0;i<n;i++){
+
+    for(int i=0;i<n;i++){
    printf("\033[1;32m0x%08x:\033[0m",g_addr);
+      if(g_addr>CONFIG_MSIZE + 0x80000000-4 || g_addr<0x80000000){
+         printf("\033[1;31mWarning: Out of memory access range.(0x80000000-0x88000000) \033[0m \n");
+         return 0;        
+  }
+
+
    for(int j=3;j>=0;j--){
      printf("\033[1;36m%02x\033[0m ", (guest_to_host(g_addr))[j]);
    } 
