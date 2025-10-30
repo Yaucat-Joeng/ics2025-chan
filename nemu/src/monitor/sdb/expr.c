@@ -19,7 +19,7 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
-
+#include <string.h>
 enum {
   TK_NOTYPE = 256, TK_EQ = 100,
   TK_DECI = 102, TK_MUL = 103,
@@ -65,8 +65,10 @@ static regex_t re[NR_REGEX] = {};
 void init_regex() {
   int i;
   char error_msg[128];
-  int ret;
-
+  int ret; //ret 貌似只是用作返回值，没有特别意义
+           //很多代码里的函数现在都是直接传入指针，直接对数据操作
+	   //不像程序设计课程中需要用到返回值，调用函数的时候，
+	   //就已经完成对数据的操作了。
   for (i = 0; i < NR_REGEX; i ++) {
     ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
     if (ret != 0) {
@@ -107,6 +109,13 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
+
+        /*for(int j=0;j<pmatch[i].rm_eo;){
+		Token
+	}*/
+
+        strncpy((tokens[i].str),e+position,pmatch.rm_eo);
+        printf("%s",tokens[i].str);
 
         switch (rules[i].token_type) {
           default: TODO();
