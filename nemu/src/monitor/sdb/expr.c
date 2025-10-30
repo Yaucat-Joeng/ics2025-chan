@@ -21,7 +21,11 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_EQ = 100,
+  TK_DECI = 102, TK_MUL = 103,
+  TK_HEXA = 101, TK_DIV = 104,
+  TK_MINUS = 105, TK_LBRA = 106,
+  TK_RBRA = 107
 
   /* TODO: Add more token types */
 
@@ -35,7 +39,17 @@ static struct rule {
   /* TODO: Add more rules.
    * Pay attention to the precedence level of different rules.
    */
-
+  {"0[xX][0-9a-fA-F]+", TK_HEXA}, //hexadecimal number
+				  //[xX]matches any one of them in '[]'
+				  //0-9,a-f,A-F matches any number of letter from a-f(lowercase or uppercase)
+				  //'+'means, matches the [] on its left many times
+  {"[0-9]+", TK_DECI},  // decimal numbers
+  {"\\*", TK_MUL},      //multiply
+  {"\\/", TK_DIV},      //divide
+  {"\\-", TK_MINUS},    //minus
+  {"\\(", TK_LBRA},     //left bracket
+  {"\\)", TK_RBRA},     //right bracket
+  
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
