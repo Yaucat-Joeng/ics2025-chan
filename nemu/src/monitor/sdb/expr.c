@@ -90,7 +90,9 @@ static bool make_token(char *e) {
   int position = 0;
   int i;
   regmatch_t pmatch;
-
+  /*  chan added */
+  init_regex();
+  /*  chan added */
   nr_token = 0;
 
   while (e[position] != '\0') {
@@ -114,11 +116,21 @@ static bool make_token(char *e) {
 		Token
 	}*/
 
-        strncpy((tokens[i].str),e+position,pmatch.rm_eo);
-        printf("%s",tokens[i].str);
-
+        /*strncpy((tokens[i].str),e+position,pmatch.rm_eo);
+        printf("%s",tokens[i].str);*/
+	int type = rules[i].token_type;
         switch (rules[i].token_type) {
-          default: TODO();
+	  case TK_NOTYPE:
+	     break;	  
+          default: 
+	     tokens[nr_token].type = type;
+	     int len = substr_len > 32 - 1 ? 32 -1 : substr_len;
+	     strncpy(tokens[nr_token].str, substr_start, len);
+	     tokens[nr_token].str[len] = '\0';
+	     printf("type:[%d]str:%s \n",tokens[nr_token].type,tokens[nr_token].str);
+	     nr_token ++;
+	     
+	     break;
         }
 
         break;
@@ -134,6 +146,39 @@ static bool make_token(char *e) {
   return true;
 }
 
+bool check_parenthese(p,q){
+	return 0;
+}
+uint32_t find_prime_op(p,q){
+	int priority[p-q+1];
+	for(int i=p;i<q,i++){
+		int j=0;
+		int type = token[i].type;
+	if(check_parentheses(i-1,i+1))
+	switch type:
+		case TK_MUL :
+		case TK_DIV :
+		case '+' : 
+		case TK_MINUS : 
+	}
+}
+uint32_t eval(p,q){
+	if(p>q){
+	Log("illegal expression format!");
+	break;
+	}
+	else if(p==q){
+	return strtol(tokens[p].str,NULL,10);
+	}
+	else if(check_parentheses(p,q)){
+	return eval(p+1,q-1);
+	}
+	else{
+	op = find_prime_op();
+	
+	}
+}
+
 
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
@@ -142,7 +187,7 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+  
 
   return 0;
 }

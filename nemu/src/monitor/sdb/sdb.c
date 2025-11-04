@@ -46,6 +46,7 @@ static char* rl_gets() {
 
 uint8_t* guest_to_host();
 void isa_reg_display();
+word_t expr(char *e, bool *success);
 
 static int cmd_c(char *args) {
   cpu_exec(-1);
@@ -114,6 +115,12 @@ static int cmd_x(char *args){
 
 return 0;
 }
+static int cmd_p(char *args){
+	bool success=true;
+	expr(args, &success);
+	return 0;
+
+}
 
 static int cmd_help(char *args);
 
@@ -128,6 +135,7 @@ static struct {
   { "si", "step 10 instructions and pause", cmd_si },
   { "info","print reg/watchpoint infos", cmd_info },
   { "x", "scan pmemory", cmd_x },
+  { "p", "caculate the value of specific EXPRESSION", cmd_p},
   /* TODO: Add more commands */
 
 };
