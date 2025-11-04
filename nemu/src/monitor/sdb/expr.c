@@ -86,7 +86,7 @@ typedef struct token {
 static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
-static bool make_token(char *e) {
+static bool make_token(char *e,int *nums) {
   int position = 0;
   int i;
   regmatch_t pmatch;
@@ -125,11 +125,12 @@ static bool make_token(char *e) {
           default: 
 	     tokens[nr_token].type = type;
 	     int len = substr_len > 32 - 1 ? 32 -1 : substr_len;
+
 	     strncpy(tokens[nr_token].str, substr_start, len);
 	     tokens[nr_token].str[len] = '\0';
 	     printf("type:[%d]str:%s \n",tokens[nr_token].type,tokens[nr_token].str);
 	     nr_token ++;
-	     
+	     *nums = nr_token;
 	     break;
         }
 
@@ -146,46 +147,103 @@ static bool make_token(char *e) {
   return true;
 }
 
-bool check_parenthese(p,q){
-	return 0;
-}
-uint32_t find_prime_op(p,q){
-	int priority[p-q+1];
-	for(int i=p;i<q,i++){
-		int j=0;
-		int type = token[i].type;
-	if(check_parentheses(i-1,i+1))
-	switch type:
-		case TK_MUL :
-		case TK_DIV :
-		case '+' : 
-		case TK_MINUS : 
+bool check_parentheses(int p,int q){
+	if(p>q) return false;
+	if(tokens[p].type!=TK_LBRA || tokens[q].type!=TK_RBRA) return false;
+
+	int depth = 0;
+	for(int i= p;i <=q;i++){
+		if(tokens[i].type ==TK_LBRA)depth++;
+		else if(tokens[i].type==TK_RBRA)depth--;
+		if(depth ==0 &&i<q)return false;
+		if(depth <0)return false;
 	}
+	return depth==0;
 }
-uint32_t eval(p,q){
+
+int priority(char op){
+	if(op=='+'||op=='-')return 1;
+	if(op=='*'||op=='/')return 2;
+	assert(0);
+
+}
+uint32_t find_prime_op(int p,int q){
+	int pos =-1;
+	int prec = 65535;
+	int depth =0;
+	for(int i=p;i<=q;i++){
+		if(tokens[i].type == TK_LBRA)depth++;
+		else if(tokens[i].type ==TK_RBRA){depth--;if(depth<0)return -1;}
+		else if(tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV ){
+			if(depth==0){
+				int _prec =priority(tokens[i].str[0]);
+				if(_prec <prec){
+					prec=_prec;
+					pos =i;
+				}
+			}
+		}
+
+	}
+	return pos;
+}
+uint32_t eval(int p,int q){
 	if(p>q){
 	Log("illegal expression format!");
-	break;
+	return 0;
 	}
 	else if(p==q){
-	return strtol(tokens[p].str,NULL,10);
+		if(tokens[p].type==TK_DECI||tokens[p].type==TK_HEXA) {
+			
+			if(tokens[p].type==TK_HEXA)
+			return strtol(tokens[p].str,NULL,16);
+			else
+			return strtol(tokens[p].str,NULL,10);
+		
+		
+		
+		}
+		else {Log("expected a number but got a operator!");return 0;}
+
 	}
+
 	else if(check_parentheses(p,q)){
 	return eval(p+1,q-1);
+
 	}
 	else{
-	op = find_prime_op();
+	int op = find_prime_op(p,q);
+	if(op==-1){
+		Log("No operator in one of the  expression!");
+		return 0;
+	}
+	uint32_t val1=0,val2=0;
+	val1=eval(p,op-1);
+	val2=eval(op+1,q);
+	switch(tokens[op].type){
+		case '+': return val1+val2;
+		case TK_MINUS: return val1-val2;
+		case TK_MUL: return val1*val2;
+	        case TK_DIV:return val1/val2;
+		default : 
+			Log("Unknown operator!");
+	    		return 0;		
+	
+	}
+
 	
 	}
 }
 
 
 word_t expr(char *e, bool *success) {
-  if (!make_token(e)) {
+  int nr_token = 0 ;
+  if (!make_token(e,&nr_token)) {
     *success = false;
     return 0;
   }
-
+  printf("%d\n",nr_token);
+  printf("resul:%d \n",eval(0,nr_token-1));
   /* TODO: Insert codes to evaluate the expression. */
   
 
