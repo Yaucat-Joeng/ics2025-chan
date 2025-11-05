@@ -128,7 +128,7 @@ static bool make_token(char *e,int *nums) {
 
 	     strncpy(tokens[nr_token].str, substr_start, len);
 	     tokens[nr_token].str[len] = '\0';
-	     printf("type:[%d]str:%s \n",tokens[nr_token].type,tokens[nr_token].str);
+	    /* printf("type:[%d]str:%s \n",tokens[nr_token].type,tokens[nr_token].str);*/
 	     nr_token ++;
 	     *nums = nr_token;
 	     break;
@@ -187,9 +187,11 @@ uint32_t find_prime_op(int p,int q){
 	}
 	return pos;
 }
-uint32_t eval(int p,int q){
+uint32_t eval(int p,int q,bool *label){
+	
 	if(p>q){
 	Log("illegal expression format!");
+	*label = false;
 	return 0;
 	}
 	else if(p==q){
@@ -203,23 +205,24 @@ uint32_t eval(int p,int q){
 		
 		
 		}
-		else {Log("expected a number but got a operator!");return 0;}
+		else {printf("\033[1mexpected a number but got a operator!\033[0m");*label=false;return 0;}
 
 	}
 
 	else if(check_parentheses(p,q)){
-	return eval(p+1,q-1);
+	return eval(p+1,q-1,label);
 
 	}
 	else{
 	int op = find_prime_op(p,q);
 	if(op==-1){
-		Log("No operator in one of the  expression!");
+		printf("\033[1mNo operator in one of the expression!\033[0m\n");
+		*label=false;
 		return 0;
 	}
 	uint32_t val1=0,val2=0;
-	val1=eval(p,op-1);
-	val2=eval(op+1,q);
+	val1=eval(p,op-1,label);
+	val2=eval(op+1,q,label);
 	switch(tokens[op].type){
 		case '+': return val1+val2;
 		case TK_MINUS: return val1-val2;
@@ -227,6 +230,7 @@ uint32_t eval(int p,int q){
 	        case TK_DIV:return val1/val2;
 		default : 
 			Log("Unknown operator!");
+			*label=false;
 	    		return 0;		
 	
 	}
@@ -237,13 +241,21 @@ uint32_t eval(int p,int q){
 
 
 word_t expr(char *e, bool *success) {
+  bool label=true;
   int nr_token = 0 ;
   if (!make_token(e,&nr_token)) {
     *success = false;
     return 0;
   }
-  printf("%d\n",nr_token);
-  printf("resul:%d \n",eval(0,nr_token-1));
+  uint32_t result = eval(0,nr_token-1,&label);
+  if(label){
+  printf("\033[1;32m caculate result:\033[0m");
+  for(int i=0;i<nr_token;i++){
+	  printf("\033[1;36m%s\033[0m",tokens[i].str);
+  }
+  printf("\033[1;36m=%d\033[0m\n",result);}
+  else{printf("\033[1;033mbad caculate, please enter the correct form of expression\033[0m\n");}
+
   /* TODO: Insert codes to evaluate the expression. */
   
 
