@@ -227,7 +227,10 @@ uint32_t eval(int p,int q,bool *label){
 		case '+': return val1+val2;
 		case TK_MINUS: return val1-val2;
 		case TK_MUL: return val1*val2;
-	        case TK_DIV:return val1/val2;
+	        case TK_DIV:
+			     if(val2!=0)
+			     return val1/val2;
+			     else{*label=false;printf("\033[1;31mcould not divided by 0!\033[0m\n");return -1;}
 		default : 
 			Log("Unknown operator!");
 			*label=false;
@@ -249,7 +252,7 @@ word_t expr(char *e, bool *success) {
   }
   uint32_t result = eval(0,nr_token-1,&label);
   if(label){
-  printf("\033[1;32m caculate result:\033[0m");
+  printf("\033[1;32mcaculate result:\033[0m");
   for(int i=0;i<nr_token;i++){
 	  printf("\033[1;36m%s\033[0m",tokens[i].str);
   }
