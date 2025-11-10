@@ -25,7 +25,7 @@ enum {
   TK_DECI = 102, TK_MUL = 103,
   TK_HEXA = 101, TK_DIV = 104,
   TK_MINUS = 105, TK_LBRA = 106,
-  TK_RBRA = 107
+  TK_RBRA = 107,TK_NEG =108
 
   /* TODO: Add more token types */
 
@@ -49,7 +49,7 @@ static struct rule {
   {"\\-", TK_MINUS},    //minus
   {"\\(", TK_LBRA},     //left bracket
   {"\\)", TK_RBRA},     //right bracket
-  
+   
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
@@ -133,6 +133,12 @@ static bool make_token(char *e,int *nums) {
 	     *nums = nr_token;
 	     break;
         }
+	int crt = nr_token-1;
+	if (tokens[crt].type==TK_MINUS){
+		if(crt == 0 || tokens[crt-1].type=='+' || tokens[crt-1].type==TK_MINUS||tokens[crt-1].type==TK_MUL||tokens[crt-1].type==TK_DIV||tokens[crt-1].type==TK_LBRA){
+		tokens[crt].type=TK_NEG;
+		}
+	}
 
         break;
       }
@@ -161,9 +167,10 @@ bool check_parentheses(int p,int q){
 	return depth==0;
 }
 
-int priority(char op){
-	if(op=='+'||op=='-')return 1;
-	if(op=='*'||op=='/')return 2;
+int priority(int op_type){
+	if(op_type=='+'||op_type==TK_MINUS)return 1;
+	if(op_type==TK_MUL||op_type==TK_DIV)return 2;
+	if(op_type==TK_NEG)return 3;
 	assert(0);
 
 }
@@ -176,7 +183,7 @@ uint32_t find_prime_op(int p,int q){
 		else if(tokens[i].type ==TK_RBRA){depth--;if(depth<0)return -1;}
 		else if(tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV ){
 			if(depth==0){
-				int _prec =priority(tokens[i].str[0]);
+				int _prec =priority(tokens[i].type);
 				if(_prec <prec){
 					prec=_prec;
 					pos =i;
@@ -213,6 +220,15 @@ uint32_t eval(int p,int q,bool *label){
 	return eval(p+1,q-1,label);
 
 	}
+/*	else if(tokens[p].type==TK_NEG)
+	{	
+		
+		uint32_t val = eval(p+1,q,label);
+			return -val;}
+		
+      		
+					
+	}*/
 	else{
 	int op = find_prime_op(p,q);
 	if(op==-1){
@@ -224,8 +240,15 @@ uint32_t eval(int p,int q,bool *label){
 	val1=eval(p,op-1,label);
 	val2=eval(op+1,q,label);
 	switch(tokens[op].type){
+		case TK_NEG : return -eval(op+1,q,label);
 		case '+': return val1+val2;
-		case TK_MINUS: return val1-val2;
+		case TK_MINUS:
+			     /*if(tokens[op-1].type!=TK_DECI||tokens[op-1].type!=TK_HEXA){if(tokens[op+1].type==TK_DECI||tokens[op+1].type==TK_HEXA)
+				     {
+				    	return 0-val2;
+				     }
+			     }
+			     else */return val1-val2;
 		case TK_MUL: return val1*val2;
 	        case TK_DIV:
 			     if(val2!=0)
