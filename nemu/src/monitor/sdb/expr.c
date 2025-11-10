@@ -179,9 +179,10 @@ uint32_t find_prime_op(int p,int q){
 	int prec = 65535;
 	int depth =0;
 	for(int i=p;i<=q;i++){
+		
 		if(tokens[i].type == TK_LBRA)depth++;
 		else if(tokens[i].type ==TK_RBRA){depth--;if(depth<0)return -1;}
-		else if(tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV ){
+		else if(tokens[i].type==TK_NEG||tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV ){
 			if(depth==0){
 				int _prec =priority(tokens[i].type);
 				if(_prec <prec){
@@ -190,6 +191,7 @@ uint32_t find_prime_op(int p,int q){
 				}
 			}
 		}
+		
 
 	}
 	return pos;
@@ -236,11 +238,14 @@ uint32_t eval(int p,int q,bool *label){
 		*label=false;
 		return 0;
 	}
+	if(tokens[op].type==TK_NEG){
+	 	return -eval(op+1,q,label);
+	}
+	else{
 	uint32_t val1=0,val2=0;
 	val1=eval(p,op-1,label);
 	val2=eval(op+1,q,label);
 	switch(tokens[op].type){
-		case TK_NEG : return -eval(op+1,q,label);
 		case '+': return val1+val2;
 		case TK_MINUS:
 			     /*if(tokens[op-1].type!=TK_DECI||tokens[op-1].type!=TK_HEXA){if(tokens[op+1].type==TK_DECI||tokens[op+1].type==TK_HEXA)
@@ -261,7 +266,7 @@ uint32_t eval(int p,int q,bool *label){
 	
 	}
 
-	
+	}
 	}
 }
 
