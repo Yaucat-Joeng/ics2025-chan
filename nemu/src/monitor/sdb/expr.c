@@ -22,13 +22,14 @@
 #include <string.h>
 
 word_t paddr_read(paddr_t addr, int len);
-
+word_t isa_reg_str2val(const char *s, bool *success);
 enum {
   TK_NOTYPE = 256, TK_EQ = 100,
   TK_DECI = 102, TK_MUL = 103,
   TK_HEXA = 101, TK_DIV = 104,
   TK_MINUS = 105, TK_LBRA = 106,
-  TK_RBRA = 107,TK_NEG =108,TK_DEREF=109
+  TK_RBRA = 107, TK_NEG =108,
+  TK_DEREF=109, TK_REG=110
 
   /* TODO: Add more token types */
 
@@ -52,14 +53,15 @@ static struct rule {
   {"\\-", TK_MINUS},    //minus
   {"\\(", TK_LBRA},     //left bracket
   {"\\)", TK_RBRA},     //right bracket
-   
+  {"\\$\\$?[a-zA-Z0-9]{1,2}",TK_REG},      //dollar 
+
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
 };
 
 #define NR_REGEX ARRLEN(rules)
-
+static bool reg_label=false;
 static regex_t re[NR_REGEX] = {};
 
 /* Rules are used for many times.
@@ -124,14 +126,24 @@ static bool make_token(char *e,int *nums) {
 	int type = rules[i].token_type;
         switch (rules[i].token_type) {
 	  case TK_NOTYPE:
-	     break;	  
-          default: 
-	     tokens[nr_token].type = type;
+	     break;
+	  case TK_REG:
+     	     tokens[nr_token].type = type;
 	     int len = substr_len > 32 - 1 ? 32 -1 : substr_len;
 
-	     strncpy(tokens[nr_token].str, substr_start, len);
-	     tokens[nr_token].str[len] = '\0';
-	    /* printf("type:[%d]str:%s \n",tokens[nr_token].type,tokens[nr_token].str);*/
+	     strncpy(tokens[nr_token].str,substr_start+1,len);
+	     tokens[nr_token].str[len]='\0';
+	     nr_token++;
+	     *nums = nr_token;
+	//	printf("%d %s\n",tokens[nr_token-1].type,tokens[nr_token-1].str);
+	      break;	
+          default: 
+	     tokens[nr_token].type = type;
+	     int len_ = substr_len > 32 - 1 ? 32 -1 : substr_len;
+
+	     strncpy(tokens[nr_token].str, substr_start, len_);
+	     tokens[nr_token].str[len_] = '\0';
+	    
 	     nr_token ++;
 	     *nums = nr_token;
 	     break;
@@ -166,7 +178,7 @@ bool check_parentheses(int p,int q){
 	if(tokens[p].type!=TK_LBRA || tokens[q].type!=TK_RBRA) return false;
 
 	int depth = 0;
-	for(int i= p;i <=q;i++){
+	for(int i= p;i<=q;i++){
 		if(tokens[i].type ==TK_LBRA)depth++;
 		else if(tokens[i].type==TK_RBRA)depth--;
 		if(depth ==0 &&i<q)return false;
@@ -212,12 +224,14 @@ uint32_t eval(int p,int q,bool *label){
 	return 0;
 	}
 	else if(p==q){
-		if(tokens[p].type==TK_DECI||tokens[p].type==TK_HEXA) {
+		if(tokens[p].type==TK_DECI||tokens[p].type==TK_HEXA||tokens[p].type==TK_REG) {
 			
 			if(tokens[p].type==TK_HEXA)
 			return (uint32_t)strtoul(tokens[p].str,NULL,16);
-			else
+			else if(tokens[p].type==TK_DECI)
 			return (uint32_t)strtoul(tokens[p].str,NULL,10);
+			else
+			return isa_reg_str2val(tokens[p].str,&reg_label);
 		
 		
 		
@@ -252,9 +266,11 @@ uint32_t eval(int p,int q,bool *label){
 	else if(tokens[op].type==TK_DEREF){
 		
 		return paddr_read(eval(op+1,q,label), 4);
-
 	
 	}
+	/*else if(tokens[op].type==TK_DLR){
+		return isa_reg_str2val()
+	}*/
 	else{
 	uint32_t val1=0,val2=0;
 	val1=eval(p,op-1,label);
@@ -287,6 +303,7 @@ uint32_t eval(int p,int q,bool *label){
 
 word_t expr(char *e, bool *success) {
   bool label=true;
+ 
   int nr_token = 0 ;
   if (!make_token(e,&nr_token)) {
     *success = false;
@@ -298,7 +315,7 @@ word_t expr(char *e, bool *success) {
   for(int i=0;i<nr_token;i++){
 	  printf("\033[1;36m%s\033[0m",tokens[i].str);
   }
-  printf("\033[1;36m=%u\033[0m\n",result);}
+  printf("\033[1;36m=0x%x\033[0m\n",result);}
   else{printf("\033[1;033mbad caculate, please enter the correct form of expression\033[0m\n");}
 
   /* TODO: Insert codes to evaluate the expression. */
