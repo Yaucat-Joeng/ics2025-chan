@@ -20,12 +20,15 @@
  */
 #include <regex.h>
 #include <string.h>
+
+word_t paddr_read(paddr_t addr, int len);
+
 enum {
   TK_NOTYPE = 256, TK_EQ = 100,
   TK_DECI = 102, TK_MUL = 103,
   TK_HEXA = 101, TK_DIV = 104,
   TK_MINUS = 105, TK_LBRA = 106,
-  TK_RBRA = 107,TK_NEG =108
+  TK_RBRA = 107,TK_NEG =108,TK_DEREF=109
 
   /* TODO: Add more token types */
 
@@ -138,6 +141,11 @@ static bool make_token(char *e,int *nums) {
 		if(crt == 0 || tokens[crt-1].type=='+' || tokens[crt-1].type==TK_MINUS||tokens[crt-1].type==TK_MUL||tokens[crt-1].type==TK_DIV||tokens[crt-1].type==TK_LBRA){
 		tokens[crt].type=TK_NEG;
 		}
+	}	
+	if (tokens[crt].type==TK_MUL){
+		if(crt == 0 || tokens[crt-1].type=='+' || tokens[crt-1].type==TK_MINUS||tokens[crt-1].type==TK_MUL||tokens[crt-1].type==TK_DIV||tokens[crt-1].type==TK_LBRA){
+		tokens[crt].type=TK_DEREF;
+		}
 	}
 
         break;
@@ -170,7 +178,7 @@ bool check_parentheses(int p,int q){
 int priority(int op_type){
 	if(op_type=='+'||op_type==TK_MINUS)return 1;
 	if(op_type==TK_MUL||op_type==TK_DIV)return 2;
-	if(op_type==TK_NEG)return 3;
+	if(op_type==TK_NEG||op_type==TK_DEREF)return 3;//尝试一下跟负号一样的priority
 	assert(0);
 
 }
@@ -182,7 +190,7 @@ uint32_t find_prime_op(int p,int q){
 		
 		if(tokens[i].type == TK_LBRA)depth++;
 		else if(tokens[i].type ==TK_RBRA){depth--;if(depth<0)return -1;}
-		else if(tokens[i].type==TK_NEG||tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV ){
+		else if(tokens[i].type==TK_DEREF||tokens[i].type==TK_NEG||tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV ){
 			if(depth==0){
 				int _prec =priority(tokens[i].type);
 				if(_prec <prec){
@@ -207,9 +215,9 @@ uint32_t eval(int p,int q,bool *label){
 		if(tokens[p].type==TK_DECI||tokens[p].type==TK_HEXA) {
 			
 			if(tokens[p].type==TK_HEXA)
-			return strtol(tokens[p].str,NULL,16);
+			return (uint32_t)strtoul(tokens[p].str,NULL,16);
 			else
-			return strtol(tokens[p].str,NULL,10);
+			return (uint32_t)strtoul(tokens[p].str,NULL,10);
 		
 		
 		
@@ -240,6 +248,12 @@ uint32_t eval(int p,int q,bool *label){
 	}
 	if(tokens[op].type==TK_NEG){
 	 	return -eval(op+1,q,label);
+	}
+	else if(tokens[op].type==TK_DEREF){
+		
+		return paddr_read(eval(op+1,q,label), 4);
+
+	
 	}
 	else{
 	uint32_t val1=0,val2=0;
@@ -284,7 +298,7 @@ word_t expr(char *e, bool *success) {
   for(int i=0;i<nr_token;i++){
 	  printf("\033[1;36m%s\033[0m",tokens[i].str);
   }
-  printf("\033[1;36m=%d\033[0m\n",result);}
+  printf("\033[1;36m=%u\033[0m\n",result);}
   else{printf("\033[1;033mbad caculate, please enter the correct form of expression\033[0m\n");}
 
   /* TODO: Insert codes to evaluate the expression. */
