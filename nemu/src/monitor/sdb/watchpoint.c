@@ -44,8 +44,13 @@ WP *new_wp(){
 	if(head==NULL){
 	head=wp_pool;
 	free_=wp_pool+1;
+	return head;
 	}
 	else{
+		WP *now = head;
+		(now-1)->next=now;
+		free_++;
+		return now;
 	
 	}
 
