@@ -29,7 +29,8 @@ enum {
   TK_HEXA = 101, TK_DIV = 104,
   TK_MINUS = 105, TK_LBRA = 106,
   TK_RBRA = 107, TK_NEG =108,
-  TK_DEREF=109, TK_REG=110
+  TK_DEREF=109, TK_REG=110,
+  TK_AND=111
 
   /* TODO: Add more token types */
 
@@ -58,6 +59,7 @@ static struct rule {
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
+  {"&&",TK_AND},	// and
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -117,13 +119,7 @@ static bool make_token(char *e,int *nums) {
          * of tokens, some extra actions should be performed.
          */
 
-        /*for(int j=0;j<pmatch[i].rm_eo;){
-		Token
-	}*/
-
-        /*strncpy((tokens[i].str),e+position,pmatch.rm_eo);
-        printf("%s",tokens[i].str);*/
-	int type = rules[i].token_type;
+       	int type = rules[i].token_type;
         switch (rules[i].token_type) {
 	  case TK_NOTYPE:
 	     break;
@@ -131,11 +127,10 @@ static bool make_token(char *e,int *nums) {
      	     tokens[nr_token].type = type;
 	     int len = substr_len > 32 - 1 ? 32 -1 : substr_len;
 
-	     strncpy(tokens[nr_token].str,substr_start+1,len);
+	     strncpy(tokens[nr_token].str,substr_start+1,2);
 	     tokens[nr_token].str[len]='\0';
 	     nr_token++;
 	     *nums = nr_token;
-	//	printf("%d %s\n",tokens[nr_token-1].type,tokens[nr_token-1].str);
 	      break;	
           default: 
 	     tokens[nr_token].type = type;
@@ -150,12 +145,12 @@ static bool make_token(char *e,int *nums) {
         }
 	int crt = nr_token-1;
 	if (tokens[crt].type==TK_MINUS){
-		if(crt == 0 || tokens[crt-1].type=='+' || tokens[crt-1].type==TK_MINUS||tokens[crt-1].type==TK_MUL||tokens[crt-1].type==TK_DIV||tokens[crt-1].type==TK_LBRA){
+		if(crt == 0 ||tokens[crt-1].type==TK_EQ|| tokens[crt-1].type==TK_AND||tokens[crt-1].type=='+' || tokens[crt-1].type==TK_MINUS||tokens[crt-1].type==TK_MUL||tokens[crt-1].type==TK_DIV||tokens[crt-1].type==TK_LBRA){
 		tokens[crt].type=TK_NEG;
 		}
 	}	
 	if (tokens[crt].type==TK_MUL){
-		if(crt == 0 || tokens[crt-1].type=='+' || tokens[crt-1].type==TK_MINUS||tokens[crt-1].type==TK_MUL||tokens[crt-1].type==TK_DIV||tokens[crt-1].type==TK_LBRA){
+		if(crt == 0 ||tokens[crt-1].type==TK_EQ|| tokens[crt-1].type==TK_AND||tokens[crt-1].type=='+' || tokens[crt-1].type==TK_MINUS||tokens[crt-1].type==TK_MUL||tokens[crt-1].type==TK_DIV||tokens[crt-1].type==TK_LBRA){
 		tokens[crt].type=TK_DEREF;
 		}
 	}
@@ -189,8 +184,9 @@ bool check_parentheses(int p,int q){
 
 int priority(int op_type){
 	if(op_type=='+'||op_type==TK_MINUS)return 1;
-	if(op_type==TK_MUL||op_type==TK_DIV)return 2;
-	if(op_type==TK_NEG||op_type==TK_DEREF)return 3;//尝试一下跟负号一样的priority
+	if(op_type==TK_MUL||op_type==TK_DIV||op_type==TK_EQ||op_type==TK_AND)return 2;
+	if(op_type==TK_NEG||op_type==TK_DEREF)return 3;
+						//尝试一下跟负号一样的priority
 	assert(0);
 
 }
@@ -202,7 +198,8 @@ uint32_t find_prime_op(int p,int q){
 		
 		if(tokens[i].type == TK_LBRA)depth++;
 		else if(tokens[i].type ==TK_RBRA){depth--;if(depth<0)return -1;}
-		else if(tokens[i].type==TK_DEREF||tokens[i].type==TK_NEG||tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV ){
+		else if(tokens[i].type!=TK_DECI&&tokens[i].type!=TK_HEXA&&tokens[i].type!=TK_REG)
+		/*else if(tokens[i].type==TK_DEREF||tokens[i].type==TK_NEG||tokens[i].type =='+' ||tokens[i].type ==TK_MINUS ||tokens[i].type ==TK_MUL ||tokens[i].type ==TK_DIV||tokens[i].type==TK_EQ||tokens[i].type==TK_AND )*/{
 			if(depth==0){
 				int _prec =priority(tokens[i].type);
 				if(_prec <prec){
@@ -278,12 +275,9 @@ uint32_t eval(int p,int q,bool *label){
 	switch(tokens[op].type){
 		case '+': return val1+val2;
 		case TK_MINUS:
-			     /*if(tokens[op-1].type!=TK_DECI||tokens[op-1].type!=TK_HEXA){if(tokens[op+1].type==TK_DECI||tokens[op+1].type==TK_HEXA)
-				     {
-				    	return 0-val2;
-				     }
-			     }
-			     else */return val1-val2;
+			     return val1-val2;
+		case TK_EQ: return val1==val2;
+		case TK_AND: return val1&&val2;
 		case TK_MUL: return val1*val2;
 	        case TK_DIV:
 			     if(val2!=0)

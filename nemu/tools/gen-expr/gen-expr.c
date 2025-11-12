@@ -21,7 +21,7 @@
 #include <string.h>
 
 // this should be enough
-static char buf[65536] = {};
+static char buf[65536] = {0};
 static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
@@ -31,9 +31,76 @@ static char *code_format =
 "  return 0; "
 "}";
 
-static void gen_rand_expr() {
-  buf[0] = '\0';
+static int depth = 0;
+static inline uint32_t choose(uint32_t n){
+	return rand()% n;
 }
+
+static void gen_str(const char *s){
+	strcat(buf, s);
+}
+
+static void gen_char(char c){
+	int len = strlen(buf);
+	buf[len]=c;
+	buf[len+1]='\0';//这个不会数组溢出吗
+}
+
+static void gen_space(){
+	if(choose(2)) gen_char(' ');
+}
+
+static void gen_num(){
+	char num[16];
+	sprintf(num, "%u", rand()%100);//为什么是0-99？
+	gen_str(num);
+}
+
+static void gen_rand_op(){
+	switch(choose(4)){
+		case 0:gen_str("+");break;
+		case 1:gen_str("-");break;
+		case 2:gen_str("*");break;
+		case 3:gen_str("/");break;	
+	}
+}
+
+static void gen_rand_expr(){
+
+	if(depth>8){
+	gen_num();
+	return;
+	}
+	depth++;
+
+	switch(choose(3)){
+		case 0:gen_num;break;
+		case 1:
+		       gen_char('(');
+		       if(choose(2)==0)gen_num();
+		       else gen_rand_expr();
+		       gen_char(')');
+		       break;
+		     	 default:
+		       gen_rand_expr();
+		      // gen_space();
+		       gen_rand_op();
+		      // gen_space();
+		       gen_rand_expr();
+		       break;
+
+	
+	
+	}
+	depth--;
+
+}
+
+
+
+
+/*static void gen_rand_expr() {
+}*/
 
 int main(int argc, char *argv[]) {
   int seed = time(0);
@@ -44,6 +111,9 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+
+    //===========
+    buf[0]='\0';
     gen_rand_expr();
 
     sprintf(code_buf, code_format, buf);
