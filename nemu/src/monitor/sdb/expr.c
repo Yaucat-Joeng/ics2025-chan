@@ -309,11 +309,11 @@ word_t expr(char *e, bool *success) {
   for(int i=0;i<nr_token;i++){
 	  printf("\033[1;36m%s\033[0m",tokens[i].str);
   }
-  printf("\033[1;36m=0x%x\033[0m\n",result);}
+  printf("\033[1;36m = 0x%x\033[0m\n",result);}
   else{printf("\033[1;033mbad caculate, please enter the correct form of expression\033[0m\n");}
 
   /* TODO: Insert codes to evaluate the expression. */
   
 
-  return 0;
+  return result;
 }

@@ -83,6 +83,31 @@ static int cmd_info(char *args){
 
 
 }
+
+static int cmd_w(char* args){
+	bool success = true;
+	WP* wp=new_wp();
+	if(wp==NULL){printf("watchpoint added failed\n");return 0;}
+	strcpy(wp->exp,args);
+	wp->value = expr(wp->exp,&success);
+	printf("NO.%u watchpoint of '%s','%u'added\n",wp->c_NO,wp->exp,wp->value);
+	return 0;
+
+}
+static int cmd_d(char* args){
+	int no = strtol(args,NULL,10);
+	WP* wp=search_watchpoint(no);
+	if(wp==NULL){
+	printf("watchpoint of NO.%u not exist\n",no);
+	return 0;
+	}
+	else {
+	free_wp(wp);
+	printf("watchpoint of NO.%u has been deleted\n",no);
+	return 0;
+	}
+
+}
 static int cmd_x(char *args){
   int n = 1;
   char *narg = strtok(args," ");
@@ -136,6 +161,8 @@ static struct {
   { "info","print reg/watchpoint infos", cmd_info },
   { "x", "scan pmemory", cmd_x },
   { "p", "caculate the value of specific EXPRESSION", cmd_p},
+  { "w", "set up  a watchpoint", cmd_w},
+  { "d", "delete a watchpoint", cmd_d},
   /* TODO: Add more commands */
 
 };

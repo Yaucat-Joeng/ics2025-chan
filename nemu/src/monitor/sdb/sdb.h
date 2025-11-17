@@ -19,5 +19,17 @@
 #include <common.h>
 
 word_t expr(char *e, bool *success);
+typedef struct watchpoint {
+  int NO;
+  int c_NO;
+  struct watchpoint *next;
+  char exp[128];
+  uint32_t value;
+} WP;
 
+// 函数声明
+void init_wp_pool();
+WP* search_watchpoint(int no);
+WP* new_wp();
+void free_wp(WP *wp);
 #endif
