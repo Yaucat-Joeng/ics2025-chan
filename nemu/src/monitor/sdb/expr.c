@@ -109,8 +109,8 @@ static bool make_token(char *e,int *nums) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        /*Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+            i, rules[i].regex, position, substr_len, substr_len, substr_start);*/
 
         position += substr_len;
 
@@ -294,6 +294,32 @@ uint32_t eval(int p,int q,bool *label){
 	}
 }
 
+word_t expr_print_disabled(char *e, bool *success) {
+  bool label=true;
+ 
+  int nr_token = 0 ;
+  if (!make_token(e,&nr_token)) {
+    *success = false;
+    return 0;
+  }
+  uint32_t result = eval(0,nr_token-1,&label);
+ /* if(label){
+  printf("\033[1;32mcaculate result:\033[0m");
+  for(int i=0;i<nr_token;i++){
+	  printf("\033[1;36m%s\033[0m",tokens[i].str);
+  }
+  printf("\033[1;36m = 0x%x\033[0m\n",result);}
+  else{printf("\033[1;033mbad caculate, please enter the correct form of expression\033[0m\n");}
+*/
+
+  if(!label){printf("bad caculate, wrong expr format in watchpoint");}
+
+
+
+  
+
+  return result;
+}
 
 word_t expr(char *e, bool *success) {
   bool label=true;

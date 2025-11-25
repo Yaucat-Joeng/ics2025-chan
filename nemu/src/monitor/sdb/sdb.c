@@ -47,7 +47,7 @@ static char* rl_gets() {
 uint8_t* guest_to_host();
 void isa_reg_display();
 word_t expr(char *e, bool *success);
-
+word_t expr_print_disabled(char* e, bool *success);
 static int cmd_c(char *args) {
   cpu_exec(-1);
   return 0;
@@ -74,6 +74,9 @@ static int cmd_info(char *args){
   if(strcmp(args,"r")==0){
     isa_reg_display();
   }
+  else if(strcmp(args,"w")==0){
+    show_watchpoint_infos();
+  }
   else
   {
     printf("unkown info argument: %s\n",args);
@@ -89,8 +92,8 @@ static int cmd_w(char* args){
 	WP* wp=new_wp();
 	if(wp==NULL){printf("watchpoint added failed\n");return 0;}
 	strcpy(wp->exp,args);
-	wp->value = expr(wp->exp,&success);
-	printf("NO.%u watchpoint of '%s','%u'added\n",wp->c_NO,wp->exp,wp->value);
+	wp->value = expr_print_disabled(wp->exp,&success);
+	printf("NO.%u watchpoint of '%s','0x%x'added\n",wp->c_NO,wp->exp,wp->value);
 	return 0;
 
 }

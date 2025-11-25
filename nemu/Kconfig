@@ -191,6 +191,15 @@ config DIFFTEST_REF_NAME
   default "kvm" if DIFFTEST_REF_KVM
   default "spike" if DIFFTEST_REF_SPIKE
   default "none"
+
+config WATCHPOINT
+  bool "Enable watchpoint scanning"
+  default y
+  help
+    Eable the function of scannig all the watchpoints.
+    Disable this to improve performance when necessary.
+
+
 endmenu
 
 if MODE_SYSTEM

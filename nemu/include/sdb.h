@@ -18,7 +18,7 @@
 
 #include <common.h>
 
-word_t expr(char *e, bool *success);
+word_t expr_print_disabled(char *e, bool *success);
 typedef struct watchpoint {
   int NO;
   int c_NO;
@@ -32,4 +32,18 @@ void init_wp_pool();
 WP* search_watchpoint(int no);
 WP* new_wp();
 void free_wp(WP *wp);
+bool scan_watchpoint();
+void show_watchpoint_infos();
+#ifdef CONFIG_WATCHPOINT
+#define SCAN_WATCHPOINT() \
+  do{ \
+    if (scan_watchpoint()){ \
+      nemu_state.state=NEMU_STOP; \
+    } \
+   }while(0)
+#else
+
+#define SCAN_WATCHPOINT() do{} while(0)
+#endif
+
 #endif

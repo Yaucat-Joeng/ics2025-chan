@@ -96,9 +96,9 @@ bool scan_watchpoint(){
 	bool success = true;
 	bool change = false;
 	while(wp!=NULL){
-	uint32_t value_expr = expr(wp->exp,&success);
+	uint32_t value_expr = expr_print_disabled(wp->exp,&success);
 	if(wp->value!=value_expr){
-	printf("value change in watchpoint %u detected, expr:'%s',value:'%u'->'%u'\n",wp->NO,wp->exp,wp->value,value_expr);
+	printf("value change in watchpoint %u detected, expr:'%s',value:'0x%x'->'0x%x'\n",wp->NO,wp->exp,wp->value,value_expr);
 	change = true;
 	wp->value = value_expr;
 	}
@@ -128,6 +128,18 @@ WP* search_watchpoint(int no){
 	}
 	else
 	{return wp;}
+
+
+
+}
+void show_watchpoint_infos(){
+	WP *wp = head;
+	printf("NO\t\t expr\t\t value\t\t \n");
+	while(wp!=NULL){	
+	printf("%u\t\t %s\t\t 0x%x\t\t \n",wp->c_NO,wp->exp,wp->value);
+	wp=wp->next;
+
+	}
 
 
 
